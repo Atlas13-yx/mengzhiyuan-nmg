@@ -1,6 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  lookupRank,
+  SCORE_RANK_SOURCE,
+  type ExamTrack,
+} from "./score-ranks";
 
 type SpeechRecognitionEventLike = {
   results: ArrayLike<{ 0: { transcript: string } }>;
@@ -27,6 +32,44 @@ declare global {
 }
 
 const officialUrl = "https://www.nm.zsks.cn/ztzl/pagkpt/";
+const subjectPolicyUrl =
+  "https://www.nm.zsks.cn/ztzl/pagkpt/zcgd/202509/t20250930_46058.html";
+const profileStorageKey = "mengzhiyuan-profile-v1";
+
+const secondSubjectOptions = ["化学", "生物学", "思想政治", "地理"] as const;
+type SecondSubject = (typeof secondSubjectOptions)[number];
+
+type VolunteerProfile = {
+  firstSubject: ExamTrack;
+  secondSubjects: SecondSubject[];
+  score: string;
+  city: string;
+  targetSchool: string;
+  preferredRegion: string;
+  preferredMajor: string;
+  schoolType: string;
+  tuition: string;
+  career: string;
+  graduationPlan: string;
+  personality: string;
+  notes: string;
+};
+
+const defaultProfile: VolunteerProfile = {
+  firstSubject: "物理",
+  secondSubjects: ["化学", "生物学"],
+  score: "558",
+  city: "呼和浩特",
+  targetSchool: "",
+  preferredRegion: "北方地区",
+  preferredMajor: "计算机与电子信息",
+  schoolType: "公办优先",
+  tuition: "每年 1 万元以内",
+  career: "互联网与信息技术",
+  graduationPlan: "优先就业",
+  personality: "理性务实",
+  notes: "",
+};
 
 const timeline = [
   {
@@ -208,6 +251,67 @@ export default function Home() {
   const [listening, setListening] = useState(false);
   const [saved, setSaved] = useState<string[]>([]);
   const [activeNav, setActiveNav] = useState("首页");
+  const [profile, setProfile] = useState<VolunteerProfile>(defaultProfile);
+  const [draftProfile, setDraftProfile] =
+    useState<VolunteerProfile>(defaultProfile);
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  const profileRank = useMemo(
+    () => lookupRank(profile.firstSubject, Number(profile.score)),
+    [profile.firstSubject, profile.score]
+  );
+
+  const draftRank = useMemo(
+    () => lookupRank(draftProfile.firstSubject, Number(draftProfile.score)),
+    [draftProfile.firstSubject, draftProfile.score]
+  );
+  const requiredProfileCount =
+    2 +
+    (draftProfile.secondSubjects.length === 2 ? 1 : 0) +
+    (draftRank ? 1 : 0);
+
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(profileStorageKey);
+      if (!stored) return;
+
+      const parsed = JSON.parse(stored) as Partial<VolunteerProfile>;
+      const restored = {
+        ...defaultProfile,
+        ...parsed,
+        secondSubjects: Array.isArray(parsed.secondSubjects)
+          ? parsed.secondSubjects.filter((subject): subject is SecondSubject =>
+              secondSubjectOptions.includes(subject as SecondSubject)
+            ).slice(0, 2)
+          : defaultProfile.secondSubjects,
+      };
+      const hydrationTimer = window.setTimeout(() => {
+        setProfile(restored);
+        setDraftProfile(restored);
+      }, 0);
+      return () => window.clearTimeout(hydrationTimer);
+    } catch {
+      window.localStorage.removeItem(profileStorageKey);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isProfileOpen) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsProfileOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [isProfileOpen]);
 
   const parsedNeeds = useMemo(() => {
     const text = voiceText;
@@ -238,6 +342,68 @@ export default function Home() {
         ? current.filter((item) => item !== school)
         : [...current, school]
     );
+  }
+
+  function openProfileEditor() {
+    setDraftProfile(profile);
+    setProfileError("");
+    setProfileSaved(false);
+    setIsProfileOpen(true);
+  }
+
+  function toggleSecondSubject(subject: SecondSubject) {
+    setProfileError("");
+    if (
+      !draftProfile.secondSubjects.includes(subject) &&
+      draftProfile.secondSubjects.length >= 2
+    ) {
+      setProfileError("再选科目只能选择 2 门，请先取消一门再选择。");
+      return;
+    }
+    setDraftProfile((current) => {
+      if (current.secondSubjects.includes(subject)) {
+        return {
+          ...current,
+          secondSubjects: current.secondSubjects.filter(
+            (item) => item !== subject
+          ),
+        };
+      }
+      return {
+        ...current,
+        secondSubjects: [...current.secondSubjects, subject],
+      };
+    });
+  }
+
+  function saveProfile() {
+    const score = Number(draftProfile.score);
+    if (
+      !Number.isInteger(score) ||
+      score < 0 ||
+      score > 750
+    ) {
+      setProfileError("高考成绩须为 0—750 之间的整数。");
+      return;
+    }
+    if (draftProfile.secondSubjects.length !== 2) {
+      setProfileError("请从化学、生物学、思想政治、地理中选择且仅选择 2 门。");
+      return;
+    }
+    if (!draftRank) {
+      setProfileError(
+        "该分数在 2026 年普通类一分一段表中没有对应记录，请核对成绩或科类。"
+      );
+      return;
+    }
+
+    setProfile(draftProfile);
+    window.localStorage.setItem(
+      profileStorageKey,
+      JSON.stringify(draftProfile)
+    );
+    setProfileSaved(true);
+    setIsProfileOpen(false);
   }
 
   function startVoice() {
@@ -365,23 +531,30 @@ export default function Home() {
           <div className="profile-card">
             <div className="profile-head">
               <span>我的 2026 志愿档案</span>
-              <button>编辑</button>
+              <button onClick={openProfileEditor}>编辑</button>
             </div>
             <div className="score-row">
               <div>
-                <strong>558</strong>
-                <span>预估分</span>
+                <strong>{profile.score}</strong>
+                <span>高考成绩</span>
               </div>
               <div>
-                <strong>12,460</strong>
-                <span>预估位次</span>
+                <strong>
+                  {profileRank?.rank.toLocaleString("zh-CN") ?? "—"}
+                </strong>
+                <span>2026 普通类位次</span>
               </div>
             </div>
             <div className="profile-tags">
-              <span>物理类</span>
-              <span>物理＋化学＋生物</span>
-              <span>呼和浩特</span>
+              <span>{profile.firstSubject}类</span>
+              <span>
+                {[profile.firstSubject, ...profile.secondSubjects].join("＋")}
+              </span>
+              <span>{profile.city || "未填写所在城市"}</span>
             </div>
+            {profileSaved && (
+              <div className="profile-saved">✓ 档案已保存到当前设备</div>
+            )}
             <div className="profile-divider" />
             <div className="chance-head">
               <span>当前可选方案</span>
@@ -690,6 +863,392 @@ export default function Home() {
           </div>
         </section>
       </div>
+
+      {isProfileOpen && (
+        <div
+          className="profile-modal-backdrop"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsProfileOpen(false);
+          }}
+        >
+          <section
+            className="profile-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="profile-modal-title"
+          >
+            <header className="profile-modal-header">
+              <div>
+                <span className="modal-eyebrow">VOLUNTEER PROFILE</span>
+                <h2 id="profile-modal-title">个人志愿档案</h2>
+                <p>完善信息后，院校专业组筛选会自动使用你的科类与位次。</p>
+              </div>
+              <button
+                className="modal-close"
+                type="button"
+                aria-label="关闭个人志愿档案"
+                onClick={() => setIsProfileOpen(false)}
+              >
+                ×
+              </button>
+            </header>
+
+            <form
+              className="profile-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                saveProfile();
+              }}
+            >
+              <div className="profile-form-scroll">
+                <section className="profile-form-section required-section">
+                  <div className="profile-form-title">
+                    <div>
+                      <h3>填写考生信息</h3>
+                      <p>用于确定普通类科类、可报专业组与同分位次。</p>
+                    </div>
+                    <span className="required-progress">
+                      必填 {requiredProfileCount}/4
+                    </span>
+                  </div>
+
+                  <div className="core-fields">
+                    <label className="profile-field">
+                      <span>高考省份</span>
+                      <select value="内蒙古" disabled>
+                        <option>内蒙古</option>
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>首选科目</span>
+                      <select
+                        value={draftProfile.firstSubject}
+                        onChange={(event) => {
+                          setProfileError("");
+                          setDraftProfile((current) => ({
+                            ...current,
+                            firstSubject: event.target.value as ExamTrack,
+                          }));
+                        }}
+                      >
+                        <option value="物理">物理类</option>
+                        <option value="历史">历史类</option>
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>高考成绩</span>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        autoFocus
+                        value={draftProfile.score}
+                        placeholder="请输入 0—750"
+                        onChange={(event) => {
+                          setProfileError("");
+                          setDraftProfile((current) => ({
+                            ...current,
+                            score: event.target.value.replace(/\D/g, "").slice(0, 3),
+                          }));
+                        }}
+                      />
+                    </label>
+                    <label className="profile-field rank-field">
+                      <span>
+                        高考排名
+                        <i title="按 2026 年内蒙古普通类一分一段表自动匹配">
+                          i
+                        </i>
+                      </span>
+                      <input
+                        readOnly
+                        value={
+                          draftRank
+                            ? draftRank.rank.toLocaleString("zh-CN")
+                            : ""
+                        }
+                        placeholder="输入成绩后自动匹配"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="subject-policy">
+                    <div className="subject-policy-copy">
+                      <strong>再选科目</strong>
+                      <span>从 4 门中选择且仅选择 2 门</span>
+                    </div>
+                    <div className="subject-options" aria-label="再选科目">
+                      {secondSubjectOptions.map((subject) => {
+                        const selected =
+                          draftProfile.secondSubjects.includes(subject);
+                        return (
+                          <button
+                            key={subject}
+                            type="button"
+                            aria-pressed={selected}
+                            className={selected ? "selected" : ""}
+                            onClick={() => toggleSecondSubject(subject)}
+                          >
+                            <span>{selected ? "✓" : "+"}</span>
+                            {subject}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <a
+                      href={subjectPolicyUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      查看 2026 选科政策 ↗
+                    </a>
+                  </div>
+
+                  {draftRank ? (
+                    <div className="rank-note" aria-live="polite">
+                      <span>✓</span>
+                      <p>
+                        2026 年内蒙古普通{draftProfile.firstSubject}类：
+                        <b>{draftProfile.score} 分</b>的同分位次为{" "}
+                        <strong>
+                          {draftRank.rangeStart.toLocaleString("zh-CN")}—
+                          {draftRank.rangeEnd.toLocaleString("zh-CN")} 名
+                        </strong>
+                        ，共 {draftRank.sameScoreCount} 人。
+                      </p>
+                      <a
+                        href={SCORE_RANK_SOURCE}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        官方一分一段表 ↗
+                      </a>
+                    </div>
+                  ) : (
+                    draftProfile.score && (
+                      <div className="rank-note rank-note-empty" aria-live="polite">
+                        <span>!</span>
+                        <p>
+                          该分数在 2026 年普通{draftProfile.firstSubject}
+                          类表中没有对应记录，请核对成绩。
+                        </p>
+                      </div>
+                    )
+                  )}
+                </section>
+
+                <section className="profile-form-section preference-section">
+                  <div className="profile-form-title">
+                    <div>
+                      <h3>填写志愿偏好</h3>
+                      <p>信息越完整，后续生成的院校专业组方案越贴近你。</p>
+                    </div>
+                    <span className="optional-tag">选填</span>
+                  </div>
+
+                  <div className="preference-grid">
+                    <label className="profile-field">
+                      <span>所在城市</span>
+                      <select
+                        value={draftProfile.city}
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            city: event.target.value,
+                          }))
+                        }
+                      >
+                        {[
+                          "呼和浩特",
+                          "包头",
+                          "赤峰",
+                          "鄂尔多斯",
+                          "呼伦贝尔",
+                          "通辽",
+                          "其他盟市",
+                        ].map((city) => (
+                          <option key={city}>{city}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>目标院校</span>
+                      <input
+                        value={draftProfile.targetSchool}
+                        placeholder="例如：内蒙古大学"
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            targetSchool: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="profile-field">
+                      <span>地域偏好</span>
+                      <select
+                        value={draftProfile.preferredRegion}
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            preferredRegion: event.target.value,
+                          }))
+                        }
+                      >
+                        {["不限地域", "内蒙古优先", "北方地区", "一线及新一线", "接受全国"].map(
+                          (item) => (
+                            <option key={item}>{item}</option>
+                          )
+                        )}
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>专业偏好</span>
+                      <input
+                        value={draftProfile.preferredMajor}
+                        placeholder="例如：计算机、临床医学"
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            preferredMajor: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="profile-field">
+                      <span>院校属性</span>
+                      <select
+                        value={draftProfile.schoolType}
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            schoolType: event.target.value,
+                          }))
+                        }
+                      >
+                        {["不限", "公办优先", "双一流优先", "行业特色院校", "接受中外合作"].map(
+                          (item) => (
+                            <option key={item}>{item}</option>
+                          )
+                        )}
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>学费倾向</span>
+                      <select
+                        value={draftProfile.tuition}
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            tuition: event.target.value,
+                          }))
+                        }
+                      >
+                        {["不限", "每年 6 千元以内", "每年 1 万元以内", "每年 3 万元以内", "可接受高学费"].map(
+                          (item) => (
+                            <option key={item}>{item}</option>
+                          )
+                        )}
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>职业倾向</span>
+                      <input
+                        value={draftProfile.career}
+                        placeholder="未来想从事的职业领域"
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            career: event.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    <label className="profile-field">
+                      <span>毕业规划</span>
+                      <select
+                        value={draftProfile.graduationPlan}
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            graduationPlan: event.target.value,
+                          }))
+                        }
+                      >
+                        {["暂未确定", "优先就业", "计划考研", "考公考编", "出国深造", "创业"].map(
+                          (item) => (
+                            <option key={item}>{item}</option>
+                          )
+                        )}
+                      </select>
+                    </label>
+                    <label className="profile-field">
+                      <span>性格特点</span>
+                      <select
+                        value={draftProfile.personality}
+                        onChange={(event) =>
+                          setDraftProfile((current) => ({
+                            ...current,
+                            personality: event.target.value,
+                          }))
+                        }
+                      >
+                        {["暂未确定", "理性务实", "探索创新", "耐心细致", "善于沟通", "组织领导"].map(
+                          (item) => (
+                            <option key={item}>{item}</option>
+                          )
+                        )}
+                      </select>
+                    </label>
+                  </div>
+                </section>
+
+                <section className="profile-form-section notes-section">
+                  <div className="profile-form-title">
+                    <div>
+                      <h3>其他偏好</h3>
+                      <p>补充身体条件、家庭期望或不接受的专业与地区。</p>
+                    </div>
+                    <span className="optional-tag">选填</span>
+                  </div>
+                  <textarea
+                    value={draftProfile.notes}
+                    maxLength={300}
+                    placeholder="例如：不想去寒冷地区；不接受医学类专业；希望院校有保研资格……"
+                    onChange={(event) =>
+                      setDraftProfile((current) => ({
+                        ...current,
+                        notes: event.target.value,
+                      }))
+                    }
+                  />
+                  <small>{draftProfile.notes.length}/300</small>
+                </section>
+              </div>
+
+              <div className="profile-form-footer">
+                <div>
+                  <p className={profileError ? "form-error visible" : "form-error"} aria-live="polite">
+                    {profileError || "档案仅保存在当前设备，可随时再次编辑。"}
+                  </p>
+                  <span>正式填报请以自治区教育考试院和高校招生章程为准。</span>
+                </div>
+                <div>
+                  <button
+                    className="cancel-profile"
+                    type="button"
+                    onClick={() => setIsProfileOpen(false)}
+                  >
+                    取消
+                  </button>
+                  <button className="save-profile" type="submit">
+                    保存档案
+                  </button>
+                </div>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
 
       <footer>
         <a className="brand footer-brand" href="#">

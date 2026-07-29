@@ -23,13 +23,13 @@ export const metadata: Metadata = {
     description: "看懂院校专业组，排好每一份志愿。",
     type: "website",
     locale: "zh_CN",
-    images: [`${publicBasePath}/og.png`],
+    images: [`${publicBasePath}/og-profile.png`],
   },
   twitter: {
     card: "summary_large_image",
     title: "蒙志愿｜内蒙古高考志愿智能决策平台",
     description: "看懂院校专业组，排好每一份志愿。",
-    images: [`${publicBasePath}/og.png`],
+    images: [`${publicBasePath}/og-profile.png`],
   },
 };
 
