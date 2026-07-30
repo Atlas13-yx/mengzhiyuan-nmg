@@ -40,6 +40,13 @@ const worker = {
       }, allowedWidths);
     }
 
+    if (env?.ASSETS && (request.method === "GET" || request.method === "HEAD")) {
+      const assetResponse = await env.ASSETS.fetch(request);
+      if (assetResponse.status !== 404) {
+        return assetResponse;
+      }
+    }
+
     return handler.fetch(request, env, ctx);
   },
 };
