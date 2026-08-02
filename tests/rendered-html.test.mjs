@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-const developmentPreviewMeta =
-  /<meta(?=[^>]*\bname=["']codex-preview["'])(?=[^>]*\bcontent=["']development["'])[^>]*>/i;
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
+import { lookupRank } from "../app/score-ranks.ts";
 
 async function render() {
   const workerUrl = new URL("../dist/server/index.js", import.meta.url);
@@ -28,64 +26,68 @@ async function render() {
   );
 }
 
-test("server-renders the starter loading skeleton", async () => {
+function localResourcePaths(html) {
+  const paths = new Set();
+  const resourcePattern = /(?:src|href)=["'](\/[^"']+)["']/g;
+
+  for (const match of html.matchAll(resourcePattern)) {
+    paths.add(new URL(match[1], "http://localhost").pathname);
+  }
+
+  paths.add("/favicon.svg");
+  paths.add("/data/announcements.json");
+  return [...paths].sort();
+}
+
+test("server-renders the current volunteer-planning page", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, developmentPreviewMeta);
-  assert.match(html, /<title>Your site is taking shape<\/title>/i);
-  assert.match(html, /Building your site/);
-  assert.match(html, /Your site is taking shape/);
-  assert.match(
-    html,
-    /Your first version will appear here automatically when it’s ready\./,
-  );
-  assert.doesNotMatch(html, /Codex/);
-  assert.match(html, /react-loading-skeleton/);
-  assert.match(html, /role="status"/);
+  assert.match(html, /<title>蒙志愿｜内蒙古高考志愿智能决策平台<\/title>/);
+  assert.match(html, /我的 2026 志愿档案/);
+  assert.match(html, />编辑<\/button>/);
+  assert.match(html, /院校专业组跨年对比/);
+  assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);
+
+  const resources = localResourcePaths(html);
+  assert.ok(resources.some((resource) => resource.startsWith("/_next/static/")));
+  assert.ok(resources.every((resource) => !resource.includes("\\")));
 });
 
-test("keeps the loading skeleton scoped and disposable", async () => {
-  const [preview, css, page, layout, packageJson, files] = await Promise.all([
-    readFile(new URL("SkeletonPreview.tsx", previewRoot), "utf8"),
-    readFile(new URL("preview.css", previewRoot), "utf8"),
-    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
-    readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
+test("vinext static cache resolves every nested page resource on Windows", async () => {
+  const [{ StaticFileCache }, response, packageSource] = await Promise.all([
+    import("../node_modules/vinext/dist/server/static-file-cache.js"),
+    render(),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
   ]);
+  const packageJson = JSON.parse(packageSource);
+  assert.equal(packageJson.devDependencies.vinext, "0.0.55");
 
-  assert.deepEqual(files.sort(), ["SkeletonPreview.tsx", "preview.css"]);
-  assert.match(preview, /from "react-loading-skeleton"/);
-  assert.match(preview, /baseColor="#eceae7"/);
-  assert.match(preview, /highlightColor="#f9f8f6"/);
-  assert.match(preview, /duration=\{2\.8\}/);
-  assert.match(preview, /sites-skeleton-search-placeholder/);
-  assert.match(packageJson, /"react-loading-skeleton": "3\.5\.0"/);
+  const html = await response.text();
+  const resources = localResourcePaths(html);
+  const clientDir = fileURLToPath(new URL("../dist/client/", import.meta.url));
+  const cache = await StaticFileCache.create(clientDir);
 
-  const shellIndex = preview.indexOf('className="sites-skeleton-shell"');
-  const statusIndex = preview.indexOf('className="sites-skeleton-status"');
-  assert.ok(shellIndex >= 0 && statusIndex > shellIndex);
-  assert.match(css, /position:\s*fixed/);
-  assert.match(css, /inset:\s*0/);
-  assert.match(css, /opacity:\s*0\.52/);
-  assert.match(css, /prefers-reduced-motion:\s*reduce/);
-  assert.doesNotMatch(css, /#020617|canvas|pets|progress/i);
-  assert.doesNotMatch(
-    preview,
-    /loading-spinner|status-mark|status-progress|canvas|cookie|random/i,
-  );
+  for (const resource of resources) {
+    assert.ok(cache.lookup(resource), `static cache should contain ${resource}`);
+  }
+});
 
-  assert.match(page, /export const metadata:\s*Metadata/);
-  assert.match(page, /"codex-preview": "development"/);
-  assert.match(page, /<SkeletonPreview \/>/);
-  assert.match(layout, /title:\s*"Starter Project"/);
-  assert.doesNotMatch(layout, /codex-preview|_sites-preview|themeColor|\bViewport\b/);
-  assert.doesNotMatch(css, /(^|\s)(html|body)\s*\{/m);
-
-  await assert.rejects(
-    access(new URL("public/_sites-preview", templateRoot)),
-  );
+test("matches 2026 Inner Mongolia ranks by first-choice subject", () => {
+  assert.deepEqual(lookupRank("历史", 419), {
+    rank: 18_323,
+    rangeStart: 18_194,
+    rangeEnd: 18_323,
+    sameScoreCount: 130,
+  });
+  assert.deepEqual(lookupRank("物理", 419), {
+    rank: 53_224,
+    rangeStart: 52_927,
+    rangeEnd: 53_224,
+    sameScoreCount: 298,
+  });
+  assert.equal(lookupRank("历史", -1), null);
+  assert.equal(lookupRank("物理", 751), null);
 });

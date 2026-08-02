@@ -8,7 +8,8 @@
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
-    "start": "vinext start",
+    "start": "vinext start --hostname 127.0.0.1 --port 4173",
+    "preview": "node scripts/preview.mjs",
     "sync:notices": "node scripts/sync-nm-notices.mjs",
     "test": "npm run build && node --test tests/rendered-html.test.mjs",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
@@ -34,7 +35,7 @@
     "react-server-dom-webpack": "19.2.6",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
-    "vinext": "0.0.50",
+    "vinext": "0.0.55",
     "vite": "8.0.13",
     "wrangler": "4.92.0"
   },
