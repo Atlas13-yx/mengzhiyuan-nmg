@@ -1,0 +1,2 @@
+:HL["/mengzhiyuan-nmg/_next/static/chunks/07b-qgj7ie1em.css","style"]
+0:{"tree":{"name":"","param":null,"prefetchHints":16,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":0,"slots":null}}},"staleTime":300,"buildId":"Nb2i-XUa2WTX7dkF2SRGY"}

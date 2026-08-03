@@ -1,0 +1,9 @@
+{
+  "release": "2026-08-03-profile-v1",
+  "builtAt": "2026-08-03T02:38:29Z",
+  "features": [
+    "volunteer-profile-editor",
+    "inner-mongolia-subject-validation",
+    "2026-score-rank-matching"
+  ]
+}
