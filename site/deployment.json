@@ -1,9 +1,12 @@
 {
-  "release": "2026-08-03-profile-v1",
-  "builtAt": "2026-08-03T02:38:29Z",
+  "release": "2026-08-03-multiroute-v2",
+  "builtAt": "2026-08-03T08:54:41.8375944Z",
   "features": [
-    "volunteer-profile-editor",
+    "15-route-platform",
+    "shared-profile-and-volunteer-state",
     "inner-mongolia-subject-validation",
-    "2026-score-rank-matching"
+    "2026-score-rank-range-matching",
+    "dynamic-risk-and-preference-fit",
+    "public-static-deep-links"
   ]
 }
