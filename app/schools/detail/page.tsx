@@ -164,8 +164,8 @@ export default function SchoolDetailPage() {
             {focusedGroupId && <div className="offering-actions"><p>正在查看你从志愿表选中的专业组。</p><button className="secondary-link" type="button" onClick={() => { setFocusedGroupId(""); setBatch("全部批次"); setSubject("全部科类"); setQuery(""); }}>查看该院校全部专业组</button></div>}
             <div className="card official-detail-filter">
               <label><span>搜索专业</span><input value={query} onChange={(event) => { setQuery(event.target.value); setVisibleOfferings(12); }} placeholder="专业名、专业代号或专业组" /></label>
-              <label><span>批次</span><select value={batch} onChange={(event) => { setBatch(event.target.value); setVisibleOfferings(12); }}><option>全部批次</option>{summary.batches.map((item) => <option key={item}>{item}</option>)}</select></label>
-              <label><span>科类</span><select value={subject} onChange={(event) => { setSubject(event.target.value); setVisibleOfferings(12); }}><option>全部科类</option>{summary.subjects.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label><span>批次</span><select aria-label="招生批次" value={batch} onChange={(event) => { setBatch(event.target.value); setVisibleOfferings(12); }}><option>全部批次</option>{summary.batches.map((item) => <option key={item}>{item}</option>)}</select></label>
+              <label><span>科类</span><select aria-label="招生科类" value={subject} onChange={(event) => { setSubject(event.target.value); setVisibleOfferings(12); }}><option>全部科类</option>{summary.subjects.map((item) => <option key={item}>{item}</option>)}</select></label>
             </div>
             <div className="official-offering-list">{offerings.slice(0, visibleOfferings).map((offering) => <OfferingCard offering={offering} school={summary} detail={detail} meta={catalogMeta} key={offering.id} />)}</div>
             {offerings.length === 0 && <div className="platform-empty"><span>⌕</span><h2>没有匹配的专业</h2><p>请更换搜索词或筛选条件。</p></div>}

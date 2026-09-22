@@ -22,7 +22,22 @@ button:disabled { cursor: not-allowed; }
 .platform-strip { padding-inline: max(24px, calc((100vw - 1320px) / 2)); height: auto; min-height: 34px; }
 .platform-strip .candidate-context { font-size: 12px; font-weight: 400; }
 .brand strong { font-family: inherit; letter-spacing: .02em; }
-.platform-data-note { align-items: flex-start; line-height: 1.7; }
+.platform-data-note { align-items: flex-start; line-height: 1.8; font-size: 13px; padding: 13px 16px; gap: 10px; }
+.platform-data-note > span { font-size: 12px; }
+.platform-page h2, .platform-page h3 { font-family: inherit; font-weight: 650; }
+.board-school > a { font-family: inherit; font-size: 18px; }
+.board-school > strong, .board-basis > strong { font-size: 14px; }
+.board-school > small, .board-basis > small, .board-basis > span, .board-check small { font-size: 12px; line-height: 1.8; font-weight: 400; }
+.board-check { font-size: 13px; padding: 12px; text-align: left; }
+.board-order button { min-height: 28px; min-width: 28px; font-size: 16px; }
+.board-order > span, .remove-button, .volunteer-summary span, .board-next-steps p, .board-next-steps a { font-size: 13px; }
+.board-toolbar h2 { font-size: 20px; }
+.board-basis a { font-size: 13px; }
+.smart-page .smart-helper, .smart-page .smart-status, .smart-page .smart-examples button, .smart-page .parse-notes, .smart-page .needs-filter-grid label { font-size: 13px; }
+.smart-page .smart-card-facts span, .smart-page .smart-official-card p, .smart-page .major-preferences legend { font-size: 12px; }
+@media (min-width: 1201px) {
+  .official-board-item { grid-template-columns: 62px 30px minmax(220px, 1.4fr) minmax(160px, .8fr) minmax(175px, .7fr) 48px; gap: 16px; padding-block: 22px; }
+}
 .data-note-official { background: #edf7f2; color: #355e50; }
 .data-note-official > span { background: #d4eee2; color: #0a654a; }
 .data-note-reference { background: #f0f3f8; color: #4f6074; }
