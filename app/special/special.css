@@ -1,0 +1,40 @@
+.special-policy-note { display: flex; align-items: flex-start; gap: 14px; padding: 16px 20px; border: 1px solid #e4e6d6; background: #fafbef; border-radius: 10px; margin: 20px 0 25px; }
+.special-policy-note > span { background: #e9ecd7; color: #6c7944; border-radius: 5px; padding: 5px 8px; font-size: 11px; white-space: nowrap; }
+.special-policy-note p { color: #75806c; font-size: 12px; line-height: 1.9; margin: 0; }
+.special-page .special-side-nav small { line-height: 1.6; }
+.special-page .special-detail-heading h2 { margin: 5px 0; font-size: 28px; font-family: serif; color: #274a3c; }
+.special-focus { border-left: 3px solid #ba9662; background: #faf6ee; border-radius: 0 8px 8px 0; padding: 15px 18px; margin: 22px 0 29px; display: flex; flex-direction: column; gap: 8px; }
+.special-focus span { color: #998565; font-size: 10px; letter-spacing: 1px; }
+.special-focus strong { color: #756442; font-size: 14px; font-weight: 600; line-height: 1.7; }
+.track-section-title { font-size: 15px; color: #335743; margin: 0 0 23px; }
+.special-route-map { list-style: none; padding: 0; margin: 0 0 28px; }
+.special-route-map li { display: grid; grid-template-columns: 39px 1fr; gap: 17px; position: relative; padding-bottom: 26px; }
+.special-route-map li:not(:last-child)::after { content: ""; position: absolute; left: 19px; top: 43px; bottom: 6px; width: 1px; background: #dce6df; }
+.special-route-map li > span { width: 39px; height: 39px; border: 1px solid #dbe7df; border-radius: 50%; background: #eff6ef; color: #548261; display: flex; align-items: center; justify-content: center; font: 15px Georgia, serif; }
+.special-route-map h4 { font-size: 14px; color: #34503e; margin: 6px 0 8px; }
+.special-route-map p { color: #7a8a7a; font-size: 12px; line-height: 1.9; margin: 0; }
+.special-checklist { padding: 22px; border: 1px solid #dce7df; border-radius: 12px; background: #f6faf5; margin: 12px 0 25px; }
+.special-checklist > div { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.special-checklist h3, .special-sources h3, .special-risk-panel h3 { font-size: 15px; color: #375443; margin: 0; }
+.special-checklist > div > span { font-size: 11px; color: #6e866c; white-space: nowrap; }
+.special-checklist progress { height: 5px; border: 0; border-radius: 5px; display: block; width: 100%; margin: 16px 0 19px; accent-color: #5b9070; overflow: hidden; background: #e4ece2; }
+.special-checklist progress::-webkit-progress-bar { background: #e4ece2; }
+.special-checklist progress::-webkit-progress-value { background: #5b9070; }
+.special-checklist > label { display: flex; align-items: flex-start; gap: 11px; font-size: 13px; color: #4e6853; line-height: 1.85; padding: 9px 0; cursor: pointer; }
+.special-checklist input { margin: 5px 0 0; width: 16px; height: 16px; flex-shrink: 0; accent-color: #307658; }
+.special-checklist > p { margin: 14px 0 19px; font-size: 11px; color: #8a8870; line-height: 1.85; }
+.special-storage-status { display: block; font-size: 10px; color: #879584; line-height: 1.8; margin-top: 12px; }
+.special-risk-panel { border-radius: 10px; background: #fcf8f0; padding: 20px; margin: 20px 0 28px; }
+.special-risk-panel h3 { color: #8a764e; font-size: 13px; }
+.special-risk-panel ul { color: #8c8067; padding-left: 18px; margin: 12px 0 0; font-size: 12px; line-height: 1.9; }
+.special-risk-panel li + li { margin-top: 5px; }
+.special-sources { margin-top: 20px; }
+.special-sources h3 { margin-bottom: 14px; }
+.special-sources > a { display: flex; align-items: center; justify-content: space-between; gap: 13px; border: 1px solid #e3eae1; border-radius: 9px; padding: 15px 17px; margin-top: 9px; }
+.special-sources > a:hover { background: #f8faf5; border-color: #b3cbb5; }
+.special-sources strong { font-size: 12px; font-weight: 600; color: #46664b; line-height: 1.75; display: block; }
+.special-sources small { font-size: 10px; color: #99a28e; display: block; margin-top: 6px; }
+.special-sources > a > span { color: #718d68; }
+.special-page .special-detail-actions { flex-wrap: wrap; gap: 12px; margin-top: 28px; }
+@media (max-width: 760px) { .special-policy-note { flex-direction: column; gap: 10px; } .special-page .special-side-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); } .special-page .special-side-nav button { min-width: 0; gap: 8px; padding: 12px 9px; } .special-page .special-side-nav button > b { display: none; } .special-page .special-side-nav button > span { width: 31px; height: 33px; } .special-page .special-detail-card { padding: 20px 17px; } .special-checklist { padding: 18px 15px; } .special-page .special-detail-heading h2 { font-size: 24px; } }
+

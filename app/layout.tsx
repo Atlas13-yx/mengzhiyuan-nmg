@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "./workspace-design.css";
+import { PlatformProvider } from "./platform-state";
 
 const repositoryName = process.env.GITHUB_REPOSITORY?.split("/")[1] ?? "";
 const isGitHubPagesBuild =
@@ -13,23 +15,23 @@ export const metadata: Metadata = {
   metadataBase: new URL(publicSiteUrl),
   title: "蒙志愿｜内蒙古高考志愿智能决策平台",
   description:
-    "以内蒙古自治区教育考试院官方信息为底座，提供公告时间线、院校专业组对比、特殊招生入口与 AI 语音筛选。",
+    "面向内蒙古新高考的多界面志愿决策平台，连接考生档案、智能匹配、院校专业组、志愿表与数据工具。",
   icons: {
     icon: `${publicBasePath}/favicon.svg`,
     shortcut: `${publicBasePath}/favicon.svg`,
   },
   openGraph: {
     title: "蒙志愿｜内蒙古高考志愿智能决策平台",
-    description: "看懂院校专业组，排好每一份志愿。",
+    description: "从考生档案到志愿表，把每一步选择依据讲清楚。",
     type: "website",
     locale: "zh_CN",
-    images: [`${publicBasePath}/og-profile.png`],
+    images: [`${publicBasePath}/og-platform-v2.png`],
   },
   twitter: {
     card: "summary_large_image",
     title: "蒙志愿｜内蒙古高考志愿智能决策平台",
-    description: "看懂院校专业组，排好每一份志愿。",
-    images: [`${publicBasePath}/og-profile.png`],
+    description: "从考生档案到志愿表，把每一步选择依据讲清楚。",
+    images: [`${publicBasePath}/og-platform-v2.png`],
   },
 };
 
@@ -40,7 +42,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <PlatformProvider>{children}</PlatformProvider>
+      </body>
     </html>
   );
 }

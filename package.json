@@ -11,7 +11,9 @@
     "start": "vinext start --hostname 127.0.0.1 --port 4173",
     "preview": "node scripts/preview.mjs",
     "sync:notices": "node scripts/sync-nm-notices.mjs",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "sync:admissions": "node scripts/sync-nm-admissions.mjs",
+    "test": "npm run typecheck && npm run build && node --test tests/*.test.mjs",
+    "typecheck": "tsc --project tsconfig.app.json --noEmit --incremental false",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
     "db:generate": "drizzle-kit generate"
   },
