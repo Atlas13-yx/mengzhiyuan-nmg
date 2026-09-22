@@ -28,7 +28,7 @@ npm run dev
 
 Windows 用户也可以运行 `npm run preview`，脚本会完成构建并检查 `http://127.0.0.1:4173` 的页面与静态资源。
 
-验证命令：`npm test`（应用类型检查、生产构建、全部 Node 回归测试）。GitHub Pages 使用 Next 静态导出；Cloudflare worker/database 是独立部署目标，不纳入纯前端类型配置。
+验证命令：`npm test`（应用类型检查、生产构建、全部 Node 回归测试）。GitHub Pages 从源码使用 Next 静态导出至 `out/`；仓库中保留的旧 `site/` 仅是历史产物，不再作为发布输入。Cloudflare worker/database 是独立部署目标，不纳入纯前端类型配置。
 
 ## 公告同步
 

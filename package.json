@@ -14,7 +14,7 @@
     "sync:admissions": "node scripts/sync-nm-admissions.mjs",
     "test": "npm run typecheck && npm run build && node --test tests/*.test.mjs",
     "typecheck": "tsc --project tsconfig.app.json --noEmit --incremental false",
-    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "lint": "eslint . --ignore-pattern dist --ignore-pattern .next --ignore-pattern site --ignore-pattern outputs",
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {

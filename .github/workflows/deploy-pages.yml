@@ -36,7 +36,8 @@ jobs:
         run: npm ci
 
       - name: Check application and data
-        run: npm test
+        # Local-root render tests; the next step verifies the real Pages base path.
+        run: GITHUB_ACTIONS=false npm test
 
       - name: Build static site from source
         run: npx next build
